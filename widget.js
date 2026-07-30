@@ -13,24 +13,25 @@
   // 2. Inject CSS styles with modern professional theme and smooth animations
   const style = document.createElement('style');
   style.innerHTML = `
-    #ca-mitra-widget {
-      position: fixed;
-      bottom: 25px;
-      right: 25px;
-      width: 400px;
-      height: 600px;
-      background: #ffffff;
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-      display: none;
-      flex-direction: column;
-      z-index: 99999;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.3s ease, transform 0.3s ease, all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+#ca-mitra-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 360px;
+  height: 520px;
+  max-height: calc(100vh - 40px); /* Prevents top header from going off-screen */
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  display: none;
+  flex-direction: column;
+  z-index: 99999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease, all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
     #ca-mitra-widget.active { opacity: 1; transform: translateY(0); display: flex; }
 
     /* Maximized Mode Class (Desktop) */
