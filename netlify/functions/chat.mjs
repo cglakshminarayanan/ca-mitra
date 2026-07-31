@@ -1,100 +1,70 @@
 import { GoogleGenAI } from '@google/genai';
 
-export async function handler(event, context) {
-  // 1. Setup CORS Headers to allow external URLs to send requests
+// Netlify automatically securely injects this from your dashboard settings
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const SYSTEM_PROMPT = `You are CA Mitra, an elite AI assistant designed specifically for Chartered Accountants (CAs) and CA students in India. 
+Your Expertise:
+- Income Tax Acts (1961 and 2025), Companies Act 2013, FCRA 2010, FEMA 1999, IBC 2016, Ind AS, GST Act, Customs, DTAAs.
+- Financial Management and Derivatives.
+Rules:
+1. Point-to-Point & Crisp: Provide direct, concise, and highly accurate answers using bullet points.
+2. Progressive Disclosure: Give direct answers first. Only provide simpler explanations if asked.
+3. Language: Fluent in English and Indian languages.
+4. File Handling: Analyze uploaded documents accurately without hallucinating outside data.`;
+
+export default async (req, context) => {
+  // Enable CORS so your popup can work on ANY external URL you embed it in
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  // 2. Handle Browser Preflight (OPTIONS) Request
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
-  }
-
-  // 3. Reject any request that isn't POST
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method Not Allowed' })
-    };
+  // Handle preflight requests from browsers
+  if (req.method === 'OPTIONS') {
+    return new Response('', { headers, status: 200 });
   }
 
   try {
-    const { prompt, file } = JSON.parse(event.body || '{}');
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    // Read the data sent from your frontend widget
+    const body = await req.json();
+    const { message, fileBase64, mimeType } = body;
 
-    // Fallback model list
-    const modelsToTry = [
-      'gemini-2.5-pro',
-      'gemini-2.0-flash',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash'
-    ];
+    const contents = [];
+    
+    // If a user uploaded a file, package it for Gemini
+    if (fileBase64 && mimeType) {
+      // Strip the 'data:image/png;base64,' prefix HTML adds
+      const base64Data = fileBase64.split(',')[1] || fileBase64;
+      contents.push({
+        inlineData: { data: base64Data, mimeType: mimeType }
+      });
+    }
+    
+    // Add the user's text prompt
+    contents.push(message);
 
-    const systemInstruction = `You are CA-Mitra, an expert AI assistant specialized in Indian Taxation (Income Tax Act 1961 & 2025, GST, Customs), Corporate Laws (Companies Act 2013), FEMA 1999, FCRA 2010, IBC 2016, Ind AS, Financial Management, International Taxation, and DTAA. 
-Provide short, crisp, point-to-point accurate answers tailored for Indian Chartered Accountants and CA students. If a user asks for further explanation, explain in simple terms. Default language is English, but respond in Indian languages if the prompt is written in them.`;
-
-    let responseText = null;
-    let lastError = null;
-
-    // Loop through fallback models
-    for (const modelName of modelsToTry) {
-      try {
-        const contents = [];
-        
-        if (file && file.base64 && file.mimeType) {
-          contents.push({
-            inlineData: {
-              mimeType: file.mimeType,
-              data: file.base64.split(',')[1] || file.base64
-            }
-          });
-        }
-
-        contents.push({ text: prompt || 'Please analyze this.' });
-
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: contents,
-          config: {
-            systemInstruction: systemInstruction
-          }
-        });
-
-        if (response && response.text) {
-          responseText = response.text;
-          break; // Success! Exit fallback loop
-        }
-      } catch (err) {
-        lastError = err;
-        console.warn(`Model ${modelName} failed:`, err.message);
+    // Call the AI (You can swap 'gemini-3.5-flash' for 'gemini-3.1-pro' if needed)
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: contents,
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
       }
-    }
+    });
 
-    if (!responseText) {
-      throw lastError || new Error('All AI models failed to respond.');
-    }
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ reply: responseText })
-    };
+    // Send the crisp answer back to the frontend
+    return new Response(JSON.stringify({ reply: response.text }), {
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      status: 200
+    });
 
   } catch (error) {
-    console.error('Backend Error:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: error.message || 'Internal Server Error' })
-    };
+    console.error("AI Error:", error);
+    return new Response(JSON.stringify({ error: 'Failed to process request.' }), { 
+      headers, 
+      status: 500 
+    });
   }
-}
+};
