@@ -1,17 +1,19 @@
-(function() {
-  // 1. Define the SVG icons to be reused
+(function () {
+  const API_URL = 'https://ca-mitra-ai.netlify.app/.netlify/functions/chat';
+
+  // 1. Define SVG Icons
   const icons = {
-    min: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
-    max: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>',
-    close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
-    chat: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
-    send: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>',
-    file: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>',
-    caMitraSymbol: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19H20" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M4 15H20" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M12 3V11M8 7H16M6 3H18M7.5 11H16.5M5.5 3L11 21L18.5 3M11 21H13" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>',
-    copy: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'
+    min: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+    max: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>`,
+    close: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+    chat: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+    send: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`,
+    file: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>`,
+    caMitraSymbol: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>`,
+    copy: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
   };
 
-  // 2. Inject CSS styles
+  // 2. Inject CSS Styles
   const style = document.createElement('style');
   style.innerHTML = `
     #ca-mitra-widget {
@@ -23,347 +25,335 @@
       max-height: calc(100vh - 40px);
       background: #ffffff;
       border-radius: 16px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
       display: none;
       flex-direction: column;
       z-index: 99999;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
       opacity: 0;
       transform: translateY(10px);
-      transition: opacity 0.3s ease, transform 0.3s ease, all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
-    #ca-mitra-widget.active { opacity: 1; transform: translateY(0); display: flex; }
-
-    #ca-mitra-widget.maximized {
-      top: 25px;
-      left: 25px;
-      bottom: 25px;
-      right: 25px;
-      width: calc(100vw - 50px) !important;
-      height: calc(100vh - 50px) !important;
-      border-radius: 12px;
-    }
-
-    @media screen and (max-width: 480px) {
-      #ca-mitra-widget {
-        width: 100vw !important;
-        height: 100dvh !important;
-        bottom: 0 !important;
-        right: 0 !important;
-        border-radius: 0 !important;
-      }
-      #ca-mitra-max { display: none; }
-      #ca-send { padding: 14px; }
-      #ca-file-label { padding: 10px; }
-    }
-
-    #ca-mitra-header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-      color: white;
-      padding: 16px 20px;
-      font-weight: 700;
-      font-size: 16px;
+    #ca-mitra-widget.active {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      user-select: none;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      opacity: 1;
+      transform: translateY(0);
     }
-    .header-title-area { display: flex; align-items: center; gap: 12px; }
-    .header-controls { display: flex; gap: 10px; align-items: center; }
-    .header-btn {
-      background: transparent;
+    #ca-mitra-widget.maximized {
+      top: 20px;
+      left: 20px;
+      bottom: 20px;
+      right: 20px;
+      width: calc(100vw - 40px) !important;
+      height: calc(100vh - 40px) !important;
+      max-height: none !important;
+    }
+    #ca-mitra-header {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ca-mitra-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .ca-mitra-controls {
+      display: flex;
+      gap: 6px;
+    }
+    .ca-mitra-btn-icon {
+      background: rgba(255, 255, 255, 0.1);
       border: none;
-      color: rgba(255, 255, 255, 0.6);
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
+      color: #94a3b8;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
-      padding: 0;
+      transition: all 0.2s;
     }
-    .header-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
-    .header-btn-close:hover { background: #e11d48; color: white; }
-
-    #ca-mitra-messages {
-      padding: 16px;
+    .ca-mitra-btn-icon:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+    #ca-mitra-body {
+      flex: 1;
+      padding: 12px;
       overflow-y: auto;
-      flex-grow: 1;
-      font-size: 14px;
-      line-height: 1.5;
-      background: #f1f5f9;
-    }
-    .msg-user {
-      color: #0f172a;
-      background: #bfdbfe;
-      border: 1px solid #93c5fd;
-      padding: 12px 16px;
-      border-radius: 16px 16px 4px 16px;
-      margin-bottom: 14px;
-      margin-left: 20%;
-      text-align: left;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    
-    .msg-ai {
-      color: #1e293b;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px 16px 16px 4px;
-      margin-bottom: 14px;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.04);
+      background: #f8fafc;
       display: flex;
       flex-direction: column;
+      gap: 10px;
     }
-    .msg-content { padding: 14px 16px; }
-    .msg-action-bar {
-      border-top: 1px solid #f8fafc;
-      padding: 6px 12px;
+    .ca-msg {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      word-break: break-word;
+      position: relative;
+    }
+    .ca-msg-user {
+      align-self: flex-end;
+      background: #6366f1;
+      color: #ffffff;
+      border-bottom-right-radius: 2px;
+    }
+    .ca-msg-ai {
+      align-self: flex-start;
+      background: #ffffff;
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 2px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .ca-copy-bar {
+      margin-top: 6px;
       display: flex;
       justify-content: flex-end;
-      background: #fdfdfd;
-      border-radius: 0 0 16px 4px;
     }
-    .copy-btn {
+    .ca-copy-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .ca-copy-btn:hover {
+      color: #6366f1;
+      background: #f1f5f9;
+    }
+    #ca-mitra-input-bar {
+      padding: 10px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #ca-mitra-input {
+      flex: 1;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 13px;
+      outline: none;
+    }
+    #ca-mitra-input:focus {
+      border-color: #6366f1;
+    }
+    .ca-action-btn {
       background: transparent;
       border: none;
       color: #64748b;
-      cursor: pointer;
-      font-size: 11.5px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-weight: 600;
-    }
-    .copy-btn:hover { color: #1e40af; }
-
-    #ca-mitra-input-area {
-      border-top: 1px solid #e2e8f0;
-      padding: 12px 14px;
-      display: flex;
-      gap: 8px;
-      background: #ffffff;
-      align-items: center;
-    }
-    #ca-prompt {
-      flex-grow: 1;
-      padding: 10px 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 24px;
-      outline: none;
-      font-size: 14px;
-      background: #f8fafc;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    #ca-prompt:focus { border-color: #3b82f6; background: white; }
-    
-    #ca-send {
-      background: #1e40af;
-      color: white;
-      border: none;
-      width: 40px;
-      height: 40px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
-      padding: 0;
     }
-    #ca-send:hover { background: #1d4ed8; }
-
-    #ca-file-label {
-      color: #64748b;
+    .ca-action-btn:hover {
       background: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      width: 40px;
-      height: 40px;
+      color: #6366f1;
+    }
+    #ca-mitra-send {
+      background: #6366f1;
+      color: #ffffff;
+    }
+    #ca-mitra-send:hover {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+    #ca-mitra-footer {
+      background: #f8fafc;
+      border-top: 1px solid #f1f5f9;
+      padding: 6px 10px;
+      font-size: 10.5px;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.3;
+    }
+    #ca-mitra-footer a {
+      color: #6366f1;
+      text-decoration: none;
+    }
+    #ca-mitra-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s, color 0.2s;
-    }
-    #ca-file-label:hover { background: #e2e8f0; color: #1e40af; }
-
-    #ca-mitra-footer {
-      font-size: 10px;
-      color: #64748b;
-      text-align: center;
-      padding: 6px 10px 10px;
-      background: #ffffff;
-      line-height: 1.4;
-      border-top: 1px solid #f1f5f9;
-    }
-    #ca-mitra-footer a { color: #3b82f6; text-decoration: none; font-weight: 600; }
-    #ca-mitra-footer a:hover { text-decoration: underline; }
-
-    #ca-mitra-toggle {
-      position: fixed;
-      bottom: 25px;
-      right: 25px;
-      background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      padding: 16px 28px;
-      cursor: pointer;
-      box-shadow: 0 6px 25px rgba(15, 23, 42, 0.5);
       z-index: 99998;
-      font-weight: 700;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s ease;
     }
-    #ca-mitra-toggle:hover { transform: translateY(-3px); box-shadow: 0 9px 30px rgba(15, 23, 42, 0.6); }
+    #ca-mitra-toggle-btn:hover {
+      transform: scale(1.05);
+    }
+    @media (max-width: 480px) {
+      #ca-mitra-widget {
+        bottom: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+      }
+      .ca-max-btn { display: none; }
+    }
   `;
   document.head.appendChild(style);
 
-  // 3. Inject HTML UI elements
+  // 3. Inject HTML Container
   const widgetContainer = document.createElement('div');
+  widgetContainer.id = 'ca-mitra-widget';
   widgetContainer.innerHTML = `
-    <button id="ca-mitra-toggle">${icons.caMitraSymbol} CA Mitra</button>
-    <div id="ca-mitra-widget">
-      <div id="ca-mitra-header">
-        <div class="header-title-area">
-          ${icons.caMitraSymbol}
-          <span>CA Mitra - Tax AI</span>
-        </div>
-        <div class="header-controls">
-          <button class="header-btn" id="ca-mitra-max" title="Maximize/Restore">${icons.max}</button>
-          <button class="header-btn" id="ca-mitra-min" title="Minimize">${icons.min}</button>
-          <button class="header-btn header-btn-close" id="ca-mitra-close" title="Close">${icons.close}</button>
-        </div>
+    <div id="ca-mitra-header">
+      <div class="ca-mitra-title">${icons.caMitraSymbol} CA-Mitra</div>
+      <div class="ca-mitra-controls">
+        <button class="ca-mitra-btn-icon ca-max-btn" id="ca-mitra-max">${icons.max}</button>
+        <button class="ca-mitra-btn-icon" id="ca-mitra-min">${icons.min}</button>
+        <button class="ca-mitra-btn-icon" id="ca-mitra-close">${icons.close}</button>
       </div>
-      <div id="ca-mitra-messages">
-        <div class="msg-ai">
-          <div class="msg-content"><b>Namaste! I am CA Mitra.</b><br>Welcome to your intelligent Indian finance compliance assistant. Upload your document or ask a query!</div>
-        </div>
-      </div>
-      <div id="ca-mitra-input-area">
-        <label id="ca-file-label" title="Upload Document">
-          ${icons.file}
-          <input type="file" id="ca-file" accept=".pdf,image/*" style="display: none;">
-        </label>
-        <input type="text" id="ca-prompt" placeholder="Ask compliance question...">
-        <button id="ca-send" title="Send Question">${icons.send}</button>
-      </div>
-      <div id="ca-mitra-footer">
-        AI can make mistakes. Verify important information.<br>
-        Developed by <a href="https://www.linkedin.com/in/lakshminarayanan-c-g" target="_blank">Lakshminarayanan C G</a> | <a href="https://ca-mitra-ai.netlify.app" target="_blank">ca-mitra-ai.netlify.app</a>
-      </div>
+    </div>
+    <div id="ca-mitra-body">
+      <div class="ca-msg ca-msg-ai">Hello! I am CA-Mitra. How can I assist you with Income Tax, GST, Companies Act, or Auditing today?</div>
+    </div>
+    <div id="ca-mitra-file-preview" style="display:none; padding:4px 12px; font-size:11px; color:#6366f1; background:#eeefef;"></div>
+    <div id="ca-mitra-input-bar">
+      <input type="file" id="ca-mitra-file" style="display:none;" />
+      <button class="ca-action-btn" id="ca-mitra-file-btn" title="Upload File">${icons.file}</button>
+      <input type="text" id="ca-mitra-input" placeholder="Type your query..." />
+      <button class="ca-action-btn" id="ca-mitra-send" title="Send">${icons.send}</button>
+    </div>
+    <div id="ca-mitra-footer">
+      AI can make mistakes. Verify critical info.<br/>
+      Developed by <a href="https://www.linkedin.com/in/lakshminarayanan-c-g" target="_blank">Lakshminarayanan C G</a> | <a href="https://ca-mitra-ai.netlify.app" target="_blank">ca-mitra-ai.netlify.app</a>
     </div>
   `;
   document.body.appendChild(widgetContainer);
 
-  // 4. UI Functionality & Logic
-  const toggleBtn = document.getElementById('ca-mitra-toggle');
-  const widget = document.getElementById('ca-mitra-widget');
-  const closeBtn = document.getElementById('ca-mitra-close');
-  const minBtn = document.getElementById('ca-mitra-min');
-  const maxBtn = document.getElementById('ca-mitra-max');
-  const sendBtn = document.getElementById('ca-send');
-  const promptInput = document.getElementById('ca-prompt');
-  const fileInput = document.getElementById('ca-file');
-  const fileLabel = document.getElementById('ca-file-label');
-  const messagesDiv = document.getElementById('ca-mitra-messages');
+  // Floating Launch Button
+  const toggleBtn = document.createElement('button');
+  toggleBtn.id = 'ca-mitra-toggle-btn';
+  toggleBtn.innerHTML = icons.chat;
+  document.body.appendChild(toggleBtn);
 
-  const API_URL = 'https://ca-mitra-ai.netlify.app/.netlify/functions/chat'; 
+  // 4. Logic & Interactivity
+  let attachedFile = null;
 
-  toggleBtn.onclick = () => { widget.classList.add('active'); toggleBtn.style.display = 'none'; };
-  closeBtn.onclick = minBtn.onclick = () => { widget.classList.remove('active'); toggleBtn.style.display = 'flex'; };
+  const body = document.getElementById('ca-mitra-body');
+  const input = document.getElementById('ca-mitra-input');
+  const fileInput = document.getElementById('ca-mitra-file');
+  const filePreview = document.getElementById('ca-mitra-file-preview');
 
-  maxBtn.onclick = () => { widget.classList.toggle('maximized'); };
-
-  fileInput.onchange = () => {
-    const file = fileInput.files[0];
-    if (file) {
-      fileLabel.style.background = '#d1fae5';
-      fileLabel.style.borderColor = '#6ee7b7';
-      fileLabel.style.color = '#065f46';
-    } else {
-      fileLabel.style.cssText = '';
-    }
+  toggleBtn.onclick = () => {
+    widgetContainer.classList.toggle('active');
   };
 
-  // Event listener for all Copy buttons
-  messagesDiv.addEventListener('click', (e) => {
-    const copyBtn = e.target.closest('.copy-btn');
-    if (copyBtn) {
-      const textToCopy = copyBtn.closest('.msg-ai').querySelector('.msg-content').innerText;
-      navigator.clipboard.writeText(textToCopy);
-      
-      const originalHTML = copyBtn.innerHTML;
-      copyBtn.innerHTML = '✓ Copied!';
-      copyBtn.style.color = '#10b981';
-      setTimeout(() => {
-        copyBtn.innerHTML = originalHTML;
-        copyBtn.style.color = ''; 
-      }, 2000);
-    }
-  });
+  document.getElementById('ca-mitra-min').onclick = () => widgetContainer.classList.remove('active');
+  document.getElementById('ca-mitra-close').onclick = () => widgetContainer.classList.remove('active');
+  
+  document.getElementById('ca-mitra-max').onclick = () => {
+    widgetContainer.classList.toggle('maximized');
+  };
+
+  document.getElementById('ca-mitra-file-btn').onclick = () => fileInput.click();
+
+  fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      attachedFile = {
+        name: file.name,
+        mimeType: file.type,
+        base64: evt.target.result
+      };
+      filePreview.innerText = `Attached: ${file.name}`;
+      filePreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSend = async () => {
-    const text = promptInput.value.trim();
-    const file = fileInput.files[0];
-    if (!text && !file) return;
+    const text = input.value.trim();
+    if (!text && !attachedFile) return;
 
-    messagesDiv.innerHTML += `<div class="msg-user"><b>You:</b> ${text || '<span style="opacity:0.6;">📂 <i>File uploaded</i></span>'}</div>`;
-    promptInput.value = '';
-    fileLabel.style.cssText = '';
-    
-    const loadingId = "load-" + Date.now();
-    messagesDiv.innerHTML += `<div class="msg-ai" id="${loadingId}"><div class="msg-content"><i style="opacity:0.7;">CA Mitra is analyzing...</i></div></div>`;
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    // Append User Message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'ca-msg ca-msg-user';
+    userMsg.innerText = text + (attachedFile ? `\n[Attached File: ${attachedFile.name}]` : '');
+    body.appendChild(userMsg);
 
-    let base64File = null;
-    let mimeType = null;
+    input.value = '';
+    const currentFile = attachedFile;
+    attachedFile = null;
+    filePreview.style.display = 'none';
 
-    if (file) {
-      mimeType = file.type;
-      base64File = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(file);
-      });
-      fileInput.value = '';
-    }
+    // Append AI "Analyzing..." Placeholder
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'ca-msg ca-msg-ai';
+    aiMsg.innerText = 'Analyzing...';
+    body.appendChild(aiMsg);
+    body.scrollTop = body.scrollHeight;
 
     try {
-      const response = await fetch(API_URL, {
+      const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, fileBase64: base64File, mimeType: mimeType })
+        body: JSON.stringify({ prompt: text, file: currentFile })
       });
-      
-      const data = await response.json();
-      document.getElementById(loadingId).remove();
-      
-      const formattedReply = data.reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-      
-      messagesDiv.innerHTML += `
-        <div class="msg-ai">
-          <div class="msg-content">${formattedReply}</div>
-          <div class="msg-action-bar">
-            <button class="copy-btn">${icons.copy} Copy</button>
-          </div>
-        </div>
-      `;
+
+      const data = await res.json();
+      if (res.ok && data.reply) {
+        aiMsg.innerText = data.reply;
+        
+        // Add Copy button to AI bubble
+        const copyBar = document.createElement('div');
+        copyBar.className = 'ca-copy-bar';
+        copyBar.innerHTML = `<button class="ca-copy-btn">${icons.copy} Copy</button>`;
+        copyBar.querySelector('.ca-copy-btn').onclick = () => {
+          navigator.clipboard.writeText(data.reply);
+          alert('Copied to clipboard!');
+        };
+        aiMsg.appendChild(copyBar);
+      } else {
+        aiMsg.innerText = `Error: ${data.error || 'Unable to fetch response.'}`;
+      }
     } catch (err) {
-      document.getElementById(loadingId).querySelector('.msg-content').innerText = "Error: CA Mitra could not connect to backend.";
-      console.error(err);
+      aiMsg.innerText = `Error connecting to backend: ${err.message}`;
     }
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    body.scrollTop = body.scrollHeight;
   };
 
-  sendBtn.onclick = handleSend;
-  promptInput.onkeypress = (e) => { if (e.key === 'Enter') handleSend(); };
+  document.getElementById('ca-mitra-send').onclick = handleSend;
+  input.onkeypress = (e) => {
+    if (e.key === 'Enter') handleSend();
+  };
 })();
