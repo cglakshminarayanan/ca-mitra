@@ -47,7 +47,7 @@ export default async (req, context) => {
 
     // Call the AI (You can swap 'gemini-3.5-flash' for 'gemini-3.1-pro' if needed)
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.1-pro-preview',
       contents: contents,
       config: {
         systemInstruction: SYSTEM_PROMPT,
