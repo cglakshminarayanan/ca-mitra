@@ -276,7 +276,7 @@
   const fileLabel = document.getElementById('ca-file-label');
   const messagesDiv = document.getElementById('ca-mitra-messages');
 
-  const API_URL = '/.netlify/functions/chat'; 
+  const API_URL = 'https://ca-mitra-ai.netlify.app/.netlify/functions/chat'; 
 
   toggleBtn.onclick = () => { widget.classList.add('active'); toggleBtn.style.display = 'none'; };
   closeBtn.onclick = minBtn.onclick = () => { widget.classList.remove('active'); toggleBtn.style.display = 'flex'; };
