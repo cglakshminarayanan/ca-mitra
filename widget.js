@@ -242,6 +242,10 @@
 
   const API_URL = 'https://ca-mitra-ai.netlify.app/.netlify/functions/chat'; 
 
+  // Keeps the full back-and-forth so the AI can be conversational, remember
+  // context, and re-check itself when you point out a mistake.
+  let conversationHistory = [];
+
   // Toggle Popup open/close
   toggleBtn.onclick = () => { widget.classList.add('active'); toggleBtn.style.display = 'none'; };
   closeBtn.onclick = minBtn.onclick = () => { widget.classList.remove('active'); toggleBtn.style.display = 'flex'; };
@@ -294,12 +298,22 @@
       fileInput.value = ''; // clear file selection
     }
 
+    // Build this turn's message parts (text + optional file)
+    const userParts = [];
+    if (base64File && mimeType) {
+      const base64Data = base64File.split(',')[1] || base64File;
+      userParts.push({ inlineData: { data: base64Data, mimeType: mimeType } });
+    }
+    userParts.push({ text: text || 'Please analyze the attached document.' });
+    conversationHistory.push({ role: 'user', parts: userParts });
+
     try {
-      // POST data to our secure Netlify Function
+      // POST full conversation history so the AI has context and can
+      // reconsider earlier answers when you point out a mistake.
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, fileBase64: base64File, mimeType: mimeType })
+        body: JSON.stringify({ history: conversationHistory })
       });
       
       const data = await response.json();
@@ -310,17 +324,22 @@
         const backendMsg = data.error || `Server error (${response.status})`;
         if (loadingEl) loadingEl.innerText = `Error: ${backendMsg}`;
         console.error('Backend error:', data);
+        // Remove the user's turn since we don't have a matching reply for it
+        conversationHistory.pop();
       } else {
         // Clean up backend reply (convert markdown bold/bullets to basic HTML)
         const formattedReply = data.reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
         if (loadingEl) loadingEl.remove();
         messagesDiv.innerHTML += `<div class="msg-ai">${formattedReply}</div>`;
+        // Remember the AI's reply so the next turn has full context
+        conversationHistory.push({ role: 'model', parts: [{ text: data.reply }] });
       }
     } catch (err) {
       // Network-level failure (fetch itself failed, CORS, offline, etc.)
       const loadingEl = document.getElementById(loadingId);
       if (loadingEl) loadingEl.innerText = "Error: CA Mitra could not connect to backend.";
       console.error(err);
+      conversationHistory.pop();
     }
     // Auto-scroll to the newest message
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
