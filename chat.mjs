@@ -43,19 +43,27 @@ export default async (req, context) => {
       });
     }
 
+    // Prior turns become the chat's context; the last entry is the new
+    // message we're sending right now. Splitting this way sidesteps a bug
+    // where passing the whole array as raw `contents` gets misparsed.
+    const priorHistory = history.slice(0, -1);
+    const latestTurn = history[history.length - 1];
+
     // Call the AI (You can swap 'gemini-3.5-flash' for 'gemini-3.1-pro' if needed)
     // googleSearch grounding lets Gemini check current facts (tax law, rates, dates)
     // instead of relying only on what it memorized during training.
-    // Passing the full 'history' as contents gives the model conversational
-    // memory, so it can be asked to simplify, elaborate, or recheck itself.
-    const response = await ai.models.generateContent({
+    // ai.chats.create() + sendMessage() is the SDK's built-in way to handle
+    // multi-turn context, so it can be asked to simplify, elaborate, or recheck itself.
+    const chat = ai.chats.create({
       model: 'gemini-3.5-flash',
-      contents: history,
+      history: priorHistory,
       config: {
         systemInstruction: SYSTEM_PROMPT,
         tools: [{ googleSearch: {} }],
       }
     });
+
+    const response = await chat.sendMessage({ message: latestTurn.parts });
 
     // Send the crisp answer back to the frontend
     return new Response(JSON.stringify({ reply: response.text }), {
