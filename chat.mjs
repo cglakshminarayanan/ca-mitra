@@ -43,11 +43,32 @@ export default async (req, context) => {
       });
     }
 
+    // TEMP DIAGNOSTIC: log exactly what we received, so if this crashes again
+    // the Netlify function log shows the real shape of the bad data.
+    console.log('Incoming history:', JSON.stringify(history));
+
     // Prior turns become the chat's context; the last entry is the new
-    // message we're sending right now. Splitting this way sidesteps a bug
-    // where passing the whole array as raw `contents` gets misparsed.
+    // message we're sending right now.
     const priorHistory = history.slice(0, -1);
     const latestTurn = history[history.length - 1];
+    console.log('priorHistory:', JSON.stringify(priorHistory));
+    console.log('latestTurn:', JSON.stringify(latestTurn));
+
+    // Defensive check: make sure the latest turn actually has usable parts,
+    // so we fail with a clear message instead of crashing inside the SDK.
+    if (
+      !latestTurn ||
+      latestTurn.role !== 'user' ||
+      !Array.isArray(latestTurn.parts) ||
+      latestTurn.parts.length === 0 ||
+      latestTurn.parts.some(p => !p || (typeof p.text !== 'string' && !p.inlineData))
+    ) {
+      console.error('Malformed latestTurn:', JSON.stringify(latestTurn));
+      return new Response(JSON.stringify({ error: 'Malformed message received by server.' }), {
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        status: 400
+      });
+    }
 
     // Call the AI (You can swap 'gemini-3.5-flash' for 'gemini-3.1-pro' if needed)
     // googleSearch grounding lets Gemini check current facts (tax law, rates, dates)
