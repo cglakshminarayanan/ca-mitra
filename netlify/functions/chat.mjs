@@ -70,21 +70,51 @@ export default async (req, context) => {
       });
     }
 
-    // Call the AI (You can swap 'gemini-3.5-flash' for 'gemini-3.1-pro' if needed)
-    // googleSearch grounding lets Gemini check current facts (tax law, rates, dates)
-    // instead of relying only on what it memorized during training.
-    // ai.chats.create() + sendMessage() is the SDK's built-in way to handle
-    // multi-turn context, so it can be asked to simplify, elaborate, or recheck itself.
-    const chat = ai.chats.create({
-      model: 'gemini-3.5-flash',
-      history: priorHistory,
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        tools: [{ googleSearch: {} }],
-      }
-    });
+    // Try models in order — if one is rate-limited (429) or unavailable (503),
+    // automatically fall back to the next one instead of failing outright.
+    // Note: gemini-2.0-flash was shut down by Google on June 1, 2026, and
+    // gemini-2.5-flash is scheduled to shut down Oct 16, 2026 — avoid relying
+    // on either as a long-term fallback. Recheck this list periodically at
+    // https://ai.google.dev/gemini-api/docs/models for current model status.
+    const MODEL_FALLBACK_CHAIN = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'];
 
-    const response = await chat.sendMessage({ message: latestTurn.parts });
+    let response = null;
+    let lastError = null;
+
+    for (const model of MODEL_FALLBACK_CHAIN) {
+      try {
+        // ai.chats.create() + sendMessage() is the SDK's built-in way to handle
+        // multi-turn context, so it can be asked to simplify, elaborate, or recheck itself.
+        // googleSearch grounding lets Gemini check current facts (tax law, rates, dates)
+        // instead of relying only on what it memorized during training.
+        const chat = ai.chats.create({
+          model,
+          history: priorHistory,
+          config: {
+            systemInstruction: SYSTEM_PROMPT,
+            tools: [{ googleSearch: {} }],
+          }
+        });
+
+        response = await chat.sendMessage({ message: latestTurn.parts });
+        console.log(`Success with model: ${model}`);
+        break; // got a response, stop trying further models
+      } catch (err) {
+        lastError = err;
+        const status = err?.status || err?.error?.code;
+        const isRetryable = status === 429 || status === 503;
+        console.error(`Model ${model} failed (status ${status}):`, err?.message || err);
+        if (!isRetryable) {
+          throw err; // not a quota/availability issue — don't waste time on other models
+        }
+        // otherwise, loop continues to the next model in the chain
+      }
+    }
+
+    if (!response) {
+      // Every model in the chain was rate-limited or unavailable
+      throw lastError;
+    }
 
     // Send the crisp answer back to the frontend
     return new Response(JSON.stringify({ reply: response.text }), {
@@ -94,7 +124,12 @@ export default async (req, context) => {
 
   } catch (error) {
     console.error("AI Error:", error);
-    return new Response(JSON.stringify({ error: 'Failed to process request.' }), { 
+    const status = error?.status || error?.error?.code;
+    const isQuota = status === 429;
+    const userMessage = isQuota
+      ? 'CA Mitra is currently experiencing high demand across all available models. Please try again in a few minutes.'
+      : 'Failed to process request.';
+    return new Response(JSON.stringify({ error: userMessage }), { 
       headers, 
       status: 500 
     });
