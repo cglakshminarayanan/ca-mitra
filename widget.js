@@ -303,13 +303,23 @@
       });
       
       const data = await response.json();
-      document.getElementById(loadingId).remove();
-      
-      // Clean up backend reply (convert markdown bold/bullets to basic HTML)
-      const formattedReply = data.reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-      messagesDiv.innerHTML += `<div class="msg-ai">${formattedReply}</div>`;
+      const loadingEl = document.getElementById(loadingId);
+
+      if (!response.ok || !data.reply) {
+        // Backend responded, but with an error (bad API key, quota, etc.)
+        const backendMsg = data.error || `Server error (${response.status})`;
+        if (loadingEl) loadingEl.innerText = `Error: ${backendMsg}`;
+        console.error('Backend error:', data);
+      } else {
+        // Clean up backend reply (convert markdown bold/bullets to basic HTML)
+        const formattedReply = data.reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        if (loadingEl) loadingEl.remove();
+        messagesDiv.innerHTML += `<div class="msg-ai">${formattedReply}</div>`;
+      }
     } catch (err) {
-      document.getElementById(loadingId).innerText = "Error: CA Mitra could not connect to backend.";
+      // Network-level failure (fetch itself failed, CORS, offline, etc.)
+      const loadingEl = document.getElementById(loadingId);
+      if (loadingEl) loadingEl.innerText = "Error: CA Mitra could not connect to backend.";
       console.error(err);
     }
     // Auto-scroll to the newest message
